@@ -12,7 +12,11 @@
 
 Name:             %{?scl_prefix}google-%{short_name}
 Version:          2.2.4
-Release:          8%{?dist}
+# Release should be higher than el6 builds. Use convention
+# 60.X where X is an increasing int. 60 for rhel-6. We use
+# 70.X for rhel-7. For some reason we cannot rely on the
+# dist tag.
+Release:          70.1%{?dist}
 Summary:          Java lib for conversion of Java objects into JSON representation
 License:          ASL 2.0
 Group:            Development/Libraries
@@ -24,15 +28,12 @@ Source0:          %{pkg_name}-%{version}.tar.xz
 
 BuildArch:        noarch
 
-BuildRequires:    java-devel
-BuildRequires:    jpackage-utils
 BuildRequires:    maven-local
 BuildRequires:    maven-surefire-provider-junit
 BuildRequires:    maven-enforcer-plugin
 BuildRequires:    maven-install-plugin
 
 Requires:         java
-Requires:         jpackage-utils
 
 %{?scl:Requires: %scl_runtime}
 
@@ -45,7 +46,7 @@ pre-existing objects that you do not have source-code of.
 %package javadoc
 Summary:          API documentation for %{name}
 Group:            Documentation
-Requires:         jpackage-utils
+%{?scl:Requires: %scl_runtime}
 
 %description javadoc
 This package contains the API documentation for %{name}.
@@ -70,11 +71,14 @@ sed -i 's/\r//g' LICENSE
 %{?scl:EOF}
 
 %files -f .mfiles
-%dir %{_javadir}/%{name}
+%dir %{_javadir}/%{pkg_name}
 
 %files javadoc -f .mfiles-javadoc
 
 %changelog
+* Mon Jun 23 2014 Severin Gehwolf <sgehwolf@redhat.com> 2.2.4-70.1
+- Add requires for thermostat1-runtime package.
+
 * Mon Jan 27 2014 Severin Gehwolf <sgehwolf@redhat.com> - 2.2.4-8
 - Own scl-ized google-gson directory in javadir.
 - Resolves: RHBZ#1057169
