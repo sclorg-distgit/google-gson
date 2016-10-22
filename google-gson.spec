@@ -8,11 +8,7 @@
 
 Name:             %{?scl_prefix}google-%{short_name}
 Version:          2.2.4
-# Release should be higher than el7 builds. Use convention
-# 60.X where X is an increasing int. 60 for rhel-6. We use
-# 70.X for rhel-7. For some reason we cannot rely on the
-# dist tag.
-Release:          60.2%{?dist}
+Release:          1.3%{?dist}
 Summary:          Java lib for conversion of Java objects into JSON representation
 License:          ASL 2.0
 Group:            Development/Libraries
@@ -24,9 +20,14 @@ Source0:          %{pkg_name}-%{version}.tar.xz
 
 BuildArch:        noarch
 
-BuildRequires:    maven30-maven-local
-BuildRequires:    maven30-maven-surefire-provider-junit
-BuildRequires:    maven30-maven-enforcer-plugin
+BuildRequires:    java7-devel
+BuildRequires:    jpackage-utils
+BuildRequires:    maven-local
+BuildRequires:    maven-surefire-provider-junit
+BuildRequires:    maven-enforcer-plugin
+
+Requires:         java
+Requires:         jpackage-utils
 
 %description
 Gson is a Java library that can be used to convert a Java object into its
@@ -37,12 +38,13 @@ pre-existing objects that you do not have source-code of.
 %package javadoc
 Summary:          API documentation for %{name}
 Group:            Documentation
+Requires:         jpackage-utils
 
 %description javadoc
 This package contains the API documentation for %{name}.
 
 %prep
-%{?scl:scl enable maven30 %{scl} - << "EOF"}
+%{?scl:scl enable %{scl} - << "EOF"}
 %setup -q -n %{pkg_name}-%{version}
 
 # convert CR+LF to LF
@@ -50,36 +52,38 @@ sed -i 's/\r//g' LICENSE
 %{?scl:EOF}
 
 %build
-%{?scl:scl enable maven30 %{scl} - << "EOF"}
+%{?scl:scl enable %{scl} - << "EOF"}
 # LANG="C" or LANG="en_US.utf8" needed for the tests
-%mvn_build -- -Dmaven.test.failure.ignore=true
+mvn-rpmbuild -Dmaven.test.failure.ignore=true package
 %{?scl:EOF}
 
 %install
-%{?scl:scl enable maven30 %{scl} - << "EOF"}
-%mvn_install
-# Own the gson directory in order to avoid it sticking
-# around after removal
-install -d -m 755 %{buildroot}%{_javadir}/google-gson
+%{?scl:scl enable %{scl} - << "EOF"}
+# jars
+install -d -m 755 %{buildroot}%{_javadir}
+install -p -m 644 target/%{short_name}-%{version}.jar %{buildroot}%{_javadir}/%{pkg_name}.jar
+
+# pom
+install -d -m 755 %{buildroot}%{_mavenpomdir}
+install -pm 644 pom.xml %{buildroot}%{_mavenpomdir}/JPP-%{pkg_name}.pom
+%add_maven_depmap JPP-%{pkg_name}.pom %{pkg_name}.jar
+
+# javadoc
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}
+cp -pr target/apidocs/* %{buildroot}%{_javadocdir}/%{name}
 %{?scl:EOF}
 
-%files -f .mfiles
+%files
 %doc LICENSE README
-# Own the gson directory in order to avoid it sticking
-# around after removal
-%dir %{_javadir}/google-gson
+%{_javadir}/%{pkg_name}.jar
+%{_mavenpomdir}/JPP-%{pkg_name}.pom
+%{_mavendepmapfragdir}/%{name}
 
-%files javadoc -f .mfiles-javadoc
+%files javadoc
 %doc LICENSE
+%doc %{_javadocdir}/%{name}
 
 %changelog
-* Fri Jun 20 2014 Severin Gehwolf <sgehwolf@redhat.com> - 2.2.4-60.2
-- Own google-gson directory in scl.
-
-* Fri Jun 20 2014 Severin Gehwolf <sgehwolf@redhat.com> - 2.2.4-60.1
-- Build using the maven30 collection.
-- Use maven-local macros.
-
 * Mon Jan 20 2014 Omair Majid <omajid@redhat.com> - 2.2.4-1.3
 - Rebuild in order to fix osgi()-style provides.
 - Resolves: RHBZ#1054813
