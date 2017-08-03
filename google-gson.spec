@@ -3,7 +3,7 @@
 
 Name:             %{?scl_prefix}google-gson
 Version:          2.3.1
-Release:          6.1%{?dist}
+Release:          6.2%{?dist}
 Summary:          Java lib for conversion of Java objects into JSON representation
 License:          ASL 2.0
 URL:              https://github.com/google/gson
@@ -63,6 +63,9 @@ rm src/test/java/com/google/gson/functional/ThrowableFunctionalTest.java
 %doc LICENSE
 
 %changelog
+* Thu Jun 22 2017 Michael Simacek <msimacek@redhat.com> - 2.3.1-6.2
+- Mass rebuild 2017-06-22
+
 * Wed Jun 21 2017 Java Maintainers <java-maint@redhat.com> - 2.3.1-6.1
 - Automated package import and SCL-ization
 
